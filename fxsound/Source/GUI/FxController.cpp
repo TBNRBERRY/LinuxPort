@@ -655,14 +655,14 @@ void FxController::setOutput(const String output_device_id, bool notify)
 
 					FxModel::getModel().pushMessage(TRANS("Output: ") + sound_device.deviceFriendlyName.c_str());
 
-					auto device_config = DeviceConfig::getDeviceConfig(settings_, output_device_id);
-					if (device_config.preset.isNotEmpty())
-					{
-						auto selected_preset = FxModel::getModel().selectPreset(device_config.preset, false);
-						setPreset(selected_preset);
-					}
-
 					output_changed_ = true;
+				}
+
+				auto device_config = DeviceConfig::getDeviceConfig(settings_, output_device_id);
+				if (device_config.preset.isNotEmpty())
+				{
+					auto selected_preset = FxModel::getModel().selectPreset(device_config.preset, false);
+					setPreset(selected_preset);
 				}
 				break;
 			}

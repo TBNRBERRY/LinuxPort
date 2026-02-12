@@ -121,6 +121,7 @@ private:
 		void selectEqualizerBands();
 		void restoreDefaults();
 
+		void visibilityChanged() override;
 		void mouseEnter(const MouseEvent& mouse_event) override;
 		void mouseExit(const MouseEvent& mouse_event) override;
 

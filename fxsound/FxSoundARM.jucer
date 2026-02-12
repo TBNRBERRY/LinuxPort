@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="F3FTdD" name="FxSound" projectType="guiapp" version="1.2.6.0"
+<JUCERPROJECT id="F3FTdD" name="FxSound" projectType="guiapp" version="1.2.7.0"
               displaySplashScreen="1" jucerFormatVersion="1" companyName="FxSound LLC"
-              companyWebsite="https://www.fxsound.com" companyCopyright="2025 FxSound&#8482;"
+              companyWebsite="https://www.fxsound.com" companyCopyright="2026 FxSound&#8482;"
               defines="UNICODE" postExportShellCommandWin="type %%1%%\Project\status_icons.rc &gt;&gt; %%1%%\Project\resources.rc"
               cppLanguageStandard="17">
   <MAINGROUP id="fy4sG5" name="FxSound">
@@ -14,6 +14,12 @@
             file="Fonts/Gilroy-Semibold.ttf"/>
     </GROUP>
     <GROUP id="{1003D6EA-45C1-E8E4-DFD9-451D205D2F09}" name="Images">
+      <FILE id="JhrNeR" name="arrow_down.svg" compile="0" resource="1" file="Images/arrow_down.svg"/>
+      <FILE id="oHJfgg" name="arrow_down_blue.svg" compile="0" resource="1"
+            file="Images/arrow_down_blue.svg"/>
+      <FILE id="j2y7wl" name="arrow_up.svg" compile="0" resource="1" file="Images/arrow_up.svg"/>
+      <FILE id="XM9MOx" name="arrow_up_blue.svg" compile="0" resource="1"
+            file="Images/arrow_up_blue.svg"/>
       <FILE id="elWkZ9" name="logo-red.svg" compile="0" resource="1" file="Images/logo-red.svg"/>
       <FILE id="tdpWdf" name="logo-white.svg" compile="0" resource="1" file="Images/logo-white.svg"/>
       <FILE id="OtMUHf" name="maximize_black.svg" compile="0" resource="1"
@@ -102,6 +108,10 @@
     <GROUP id="{D719274A-0BE1-FA67-529B-B012A702512B}" name="Source">
       <GROUP id="{7D838BF2-5642-7BE7-DF78-745226F70630}" name="GUI">
         <GROUP id="{59F271E4-F186-3EBD-DA7B-97C454130F71}" name="Components">
+          <FILE id="Rgr4wj" name="FxOutputPreference.cpp" compile="1" resource="0"
+                file="Source/GUI/FxOutputPreference.cpp"/>
+          <FILE id="tWVZ0P" name="FxOutputPreference.h" compile="0" resource="0"
+                file="Source/GUI/FxOutputPreference.h"/>
           <FILE id="m61HtG" name="FxAudioSlider.cpp" compile="1" resource="0"
                 file="Source/GUI/FxAudioSlider.cpp"/>
           <FILE id="QluxCZ" name="FxAudioSlider.h" compile="0" resource="0" file="Source/GUI/FxAudioSlider.h"/>
@@ -199,6 +209,9 @@
           <FILE id="mmvC93" name="SysInfo.h" compile="0" resource="0" file="Source/Utils/SysInfo/SysInfo.h"/>
         </GROUP>
         <GROUP id="{4B583B65-EB6A-26FA-E8D9-48551CBAB902}" name="Settings">
+          <FILE id="JST0ln" name="DeviceConfig.cpp" compile="1" resource="0"
+                file="Source/Utils/Settings/DeviceConfig.cpp"/>
+          <FILE id="tXS54C" name="DeviceConfig.h" compile="0" resource="0" file="Source/Utils/Settings/DeviceConfig.h"/>
           <FILE id="Wqw8lj" name="Settings.cpp" compile="1" resource="0" file="Source/Utils/Settings/Settings.cpp"/>
           <FILE id="je5afJ" name="Settings.h" compile="0" resource="0" file="Source/Utils/Settings/Settings.h"/>
         </GROUP>

@@ -90,6 +90,8 @@ class FxOutputPreference : public Component
 public:
     FxOutputPreference();
 
+    void update();
+
 private:
     static constexpr int ROW_HEIGHT = 30;
 

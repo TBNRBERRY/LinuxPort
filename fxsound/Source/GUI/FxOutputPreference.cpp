@@ -41,8 +41,7 @@ FxOutputDeviceRow::FxOutputDeviceRow(FxOutputPreferenceListModel& model) : up_bu
         };
 
     preset_list_.setWantsKeyboardFocus(true);
-    preset_list_.setJustificationType(Justification::centredLeft);
-    preset_list_.setTextWhenNothingSelected(TRANS("Select preset"));
+    preset_list_.setJustificationType(Justification::centredLeft);   
     preset_list_.onChange = [this]() {
         auto index = preset_list_.getSelectedItemIndex();
         if (index >= 0)
@@ -111,6 +110,7 @@ void FxOutputDeviceRow::update(int index, const DeviceConfig& device_config)
     device_name_.setEnabled(FxController::getInstance().isOutputDeviceConnected(device_config.device_id));
 
     preset_list_.clear();
+    preset_list_.setTextWhenNothingSelected(TRANS("Select preset"));
     auto& model = FxModel::getModel();
     int selected_id = 0;
     for (auto i = 0; i < model.getPresetCount(); i++)
@@ -241,6 +241,13 @@ FxOutputPreference::FxOutputPreference()
     output_preference_list_.setMultipleSelectionEnabled(false);
 
     output_preference_list_.updateContent();
+    output_preference_list_.repaint();
+}
+
+void FxOutputPreference::update()
+{
+    output_preference_list_.updateContent();
+    output_preference_list_.resized();
     output_preference_list_.repaint();
 }
 

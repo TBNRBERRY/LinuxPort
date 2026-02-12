@@ -31,6 +31,12 @@ namespace FxSound
                 return a.isActive > b.isActive;
             });
 
+        std::sort(sound_devices.begin(), sound_devices.end(),
+            [](const SoundDevice& a, const SoundDevice& b)
+            {
+                return (a.isDefaultDevice || a.isTargetedRealPlaybackDevice) > (b.isDefaultDevice || b.isTargetedRealPlaybackDevice);
+            });
+
         for (auto sound_device : sound_devices)
         {
             if (sound_device.isRealDevice)

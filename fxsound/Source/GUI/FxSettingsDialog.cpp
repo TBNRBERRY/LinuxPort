@@ -539,6 +539,14 @@ void FxSettingsDialog::AudioSettingsPane::updateEqualizerBandsText()
 	}
 }
 
+void FxSettingsDialog::AudioSettingsPane::visibilityChanged()
+{
+	if (isVisible())
+	{
+		output_preference_.update();
+    }
+}
+
 void FxSettingsDialog::AudioSettingsPane::mouseEnter(const MouseEvent& mouse_event)
 {
 	Component::mouseEnter(mouse_event);
