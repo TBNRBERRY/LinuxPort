@@ -38,7 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //extern CsndDevicesMMNotificationClient g_DeviceEvents;	// This is for registering the device callbacks.
 
 // Gets an array of objects for all audio devices and stores indexes to the default device and DFX device if installed.
-int PT_DECLSPEC sndDevices_GetAll( PT_HANDLE *hp_sndDevices, int *ip_num_devices)
+int PT_DECLSPEC sndDevices_GetAll(PT_HANDLE* hp_sndDevices, int* ip_num_devices)
 {
 	HRESULT hr;
 	IMMDevicePtr pDefaultDevice = NULL;
@@ -59,18 +59,15 @@ int PT_DECLSPEC sndDevices_GetAll( PT_HANDLE *hp_sndDevices, int *ip_num_devices
 	EDataFlow flow = eRender;
 	ERole role = eMultimedia;
 
-	struct sndDevicesHdlType *cast_handle;
-    
-	cast_handle = (struct sndDevicesHdlType *)hp_sndDevices;
+	struct sndDevicesHdlType* cast_handle;
+
+	cast_handle = (struct sndDevicesHdlType*)hp_sndDevices;
 
 	if (cast_handle == NULL)
 		return(NOT_OKAY);
 
-	// Errors should be cleared at higher level.
-	//cast_handle->function_status = SND_DEVICES_DEVICE_OPERATION_COMPLETED;
-
 	// Copy current devices to previous devices to allow new device detection
-	if( (cast_handle->numRealDevices > 0) && (cast_handle->numRealDevices != cast_handle->numPreviousRealDevices) )
+	if ((cast_handle->numRealDevices > 0) && (cast_handle->numRealDevices != cast_handle->numPreviousRealDevices))
 	{
 		for (k = 0; k < cast_handle->numRealDevices; k++)
 		{
@@ -79,7 +76,7 @@ int PT_DECLSPEC sndDevices_GetAll( PT_HANDLE *hp_sndDevices, int *ip_num_devices
 				wcscpy(cast_handle->pwszIDPreviousRealDevices[k], cast_handle->pwszIDRealDevices[k]);
 			}
 		}
-			
+
 		cast_handle->numPreviousRealDevices = cast_handle->numRealDevices;
 	}
 	cast_handle->numRealDevices = 0;
@@ -87,20 +84,19 @@ int PT_DECLSPEC sndDevices_GetAll( PT_HANDLE *hp_sndDevices, int *ip_num_devices
 	hr = CoCreateInstance(cast_handle->CLSID_MMDeviceEnumerator, NULL, CLSCTX_ALL, cast_handle->IID_IMMDeviceEnumerator, (void**)&pEnumerator);
 	if (FAILED(hr)) SND_DEVICES_SET_STATUS_AND_RETURN_OK(SND_DEVICES_INSTANCE_CREATE_FAILED)
 
-	// Enumerate all playback audio devices, "eRender" means look only for playback devices.
-	hr = pEnumerator->EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE | DEVICE_STATE_UNPLUGGED, &pCollectionAllDevices);
-
+		// Enumerate all playback audio devices, "eRender" means look only for playback devices.
+		hr = pEnumerator->EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE | DEVICE_STATE_UNPLUGGED, &pCollectionAllDevices);
 	if (FAILED(hr)) SND_DEVICES_SET_STATUS_AND_RETURN_OK(SND_DEVICES_ENUMERATE_FAILED)
 
-	// Now get total number of playback devices
-	hr = pCollectionAllDevices->GetCount(&deviceCount);
+		// Now get total number of playback devices
+		hr = pCollectionAllDevices->GetCount(&deviceCount);
 	if (FAILED(hr)) SND_DEVICES_SET_STATUS_AND_RETURN_OK(SND_DEVICES_GETCOUNT_FAILED)
 
-	cast_handle->totalNumDevices = deviceCount;
+		cast_handle->totalNumDevices = deviceCount;
 	*ip_num_devices = deviceCount;
 
 	// There are no active sound devices and thus also no default device.
-	if( cast_handle->totalNumDevices <= 0 )
+	if (cast_handle->totalNumDevices <= 0)
 	{
 		cast_handle->numRealDevices = 0;
 		cast_handle->dfxDeviceNum = SND_DEVICES_DEVICE_NOT_PRESENT;
@@ -112,28 +108,30 @@ int PT_DECLSPEC sndDevices_GetAll( PT_HANDLE *hp_sndDevices, int *ip_num_devices
 	hr = pEnumerator->GetDefaultAudioEndpoint(eRender, eMultimedia, &pDefaultDevice);
 	if (FAILED(hr)) SND_DEVICES_SET_STATUS_AND_RETURN_OK(SND_DEVICES_GET_AUDIOENDPOINT_FAILED);
 
-	if(pDefaultDevice != NULL)
+	if (pDefaultDevice != NULL)
 	{
-		// Get the default device ID strincast_handle->
 		pDefaultDevice->GetId(&pwszIDdefault);
 		if (FAILED(hr)) SND_DEVICES_SET_STATUS_AND_RETURN_OK(SND_DEVICES_GETID_FAILED);
 	}
 
-	// Loop to set up objects for each device and to find and store DFX and default device nums.
+	// -------------------------------------------------------------------------
+	// Pass 1: Retrieve all device handles, IDs, names, and identify the DFX
+	//         device index before classifying any device as "real".
+	// -------------------------------------------------------------------------
+	cast_handle->dfxDeviceNum = SND_DEVICES_DEVICE_NOT_PRESENT;
+
 	for (i = 0; i < deviceCount; i++)
 	{
-		// Get indexed device.
 		hr = pCollectionAllDevices->Item(i, &(cast_handle->pAllDevices[i]));
 		if (FAILED(hr))
 		{
 			CoTaskMemFree(pwszIDdefault);
 			SND_DEVICES_SET_STATUS_AND_RETURN_OK(SND_DEVICES_GET_INDEXED_DEVICE_FAILED);
 		}
-			
 
+		// Get and store the endpoint ID string for this device.
 		LPWSTR pID = NULL;
 		cast_handle->pwszID[i][0] = L'\0';
-		// Get and store the endpoint ID string for each device (this is the GUID ID for the device).
 		hr = cast_handle->pAllDevices[i]->GetId(&pID);
 		if (FAILED(hr)) SND_DEVICES_SET_STATUS_AND_RETURN_OK(SND_DEVICES_GETID_FAILED);
 		wcscpy_s(cast_handle->pwszID[i], PT_MAX_GENERIC_STRLEN, pID);
@@ -147,18 +145,15 @@ int PT_DECLSPEC sndDevices_GetAll( PT_HANDLE *hp_sndDevices, int *ip_num_devices
 			SND_DEVICES_SET_STATUS_AND_RETURN_OK(SND_DEVICES_INSTANCE_CREATE_FAILED);
 		}
 
-		// Initialize containers for property values.
 		PropVariantInit(&FriendlyName);
-		// Get the devices's friendly-name property. This key doesn't include the "Speakers" prefix.
 		hr = pProps->GetValue(PKEY_Device_FriendlyName, &FriendlyName);
 		if (FAILED(hr))
 		{
 			PropVariantClear(&FriendlyName);
 			continue;
 		}
-			
+
 		PropVariantInit(&DeviceDesc);
-		// Get the devices's descriptive name property, ie "Speakers".
 		hr = pProps->GetValue(PKEY_Device_DeviceDesc, &DeviceDesc);
 		if (FAILED(hr))
 		{
@@ -166,14 +161,13 @@ int PT_DECLSPEC sndDevices_GetAll( PT_HANDLE *hp_sndDevices, int *ip_num_devices
 			PropVariantClear(&DeviceDesc);
 			continue;
 		}
-			
-		// Copy friendly name and description
-        if (FriendlyName.pwszVal != NULL && DeviceDesc.pwszVal != NULL) 
-        {
-            wcscpy(cast_handle->deviceFriendlyName[i], FriendlyName.pwszVal);
-            wcscpy(cast_handle->deviceDescription[i], DeviceDesc.pwszVal);
 
-            // Get device number of channels
+		if (FriendlyName.pwszVal != NULL && DeviceDesc.pwszVal != NULL)
+		{
+			wcscpy(cast_handle->deviceFriendlyName[i], FriendlyName.pwszVal);
+			wcscpy(cast_handle->deviceDescription[i], DeviceDesc.pwszVal);
+
+			// Get device number of channels.
 			if (sndDevicesGetFormatFromID(hp_sndDevices, cast_handle->pwszID[i], &wfx, &resultFlag) != OKAY)
 			{
 				CoTaskMemFree(pwszIDdefault);
@@ -181,35 +175,25 @@ int PT_DECLSPEC sndDevices_GetAll( PT_HANDLE *hp_sndDevices, int *ip_num_devices
 				PropVariantClear(&DeviceDesc);
 				return(NOT_OKAY);
 			}
-                
-            cast_handle->deviceNumChannel[i] = wfx.nChannels;
+			cast_handle->deviceNumChannel[i] = wfx.nChannels;
 
-            // Check ID strings to see if this is the default device
-            if (pwszIDdefault != NULL && wcscmp(cast_handle->pwszID[i], pwszIDdefault) == 0)
-                cast_handle->defaultDeviceNum = i;
+			// Check ID strings to see if this is the default device.
+			if (pwszIDdefault != NULL && wcscmp(cast_handle->pwszID[i], pwszIDdefault) == 0)
+				cast_handle->defaultDeviceNum = i;
 
-            // Check friendly name to see if this is one of the DFX devices.
-            // NOTE: We need to check if the DFX name is part of the device name. Normally it will be an exact
-            //			match, but for some reason, sometimes windows prepends the device name with "2-" which
-            //			causes the device name to appear as ""2- DFX Audio Enhancer 11.1"
-            //
-            //			The old way we did the exact match check is as follows:
-            //			if( wcscmp(cast_handle->deviceFriendlyName[i], SND_DEVICES_DFX_DEVICE_STRING) == 0 )
-
-            if (pstrCalcLocationOfStrInStr_Wide(cast_handle->deviceFriendlyName[i], SND_DEVICES_DFX_DEVICE_STRING,
-                0, &i_found_start_location, &i_found_dfx_string) != OKAY)
-            {
-                hr = S_FALSE;
-				if (FAILED(hr))
-				{
-					CoTaskMemFree(pwszIDdefault);
-					PropVariantClear(&FriendlyName);
-					PropVariantClear(&DeviceDesc);
-					SND_DEVICES_SET_STATUS_AND_RETURN_OK(SND_DEVICES_INSTANCE_CREATE_FAILED);
-				}
-            }
-            if (i_found_dfx_string)
-                cast_handle->dfxDeviceNum = i;
+			// Check friendly name to see if this is the DFX device.
+			// NOTE: We check if the DFX name is a substring rather than an exact match because
+			//       Windows can prepend the device name with e.g. "2-", yielding "2- DFX Audio Enhancer 11.1".
+			if (pstrCalcLocationOfStrInStr_Wide(cast_handle->deviceFriendlyName[i], SND_DEVICES_DFX_DEVICE_STRING,
+				0, &i_found_start_location, &i_found_dfx_string) != OKAY)
+			{
+				CoTaskMemFree(pwszIDdefault);
+				PropVariantClear(&FriendlyName);
+				PropVariantClear(&DeviceDesc);
+				SND_DEVICES_SET_STATUS_AND_RETURN_OK(SND_DEVICES_INSTANCE_CREATE_FAILED);
+			}
+			if (i_found_dfx_string)
+				cast_handle->dfxDeviceNum = i;
 
 			hr = cast_handle->pAllDevices[i]->GetState(&cast_handle->deviceState[i]);
 			if (FAILED(hr))
@@ -219,26 +203,31 @@ int PT_DECLSPEC sndDevices_GetAll( PT_HANDLE *hp_sndDevices, int *ip_num_devices
 				PropVariantClear(&DeviceDesc);
 				return(NOT_OKAY);
 			}
-
-            // If its not one of the DFX devices, store it as a real playback device
-            if ((cast_handle->dfxDeviceNum != i))
-            {
-                cast_handle->pwszIDRealDevices[cast_handle->numRealDevices] = cast_handle->pwszID[i];
-                cast_handle->deviceFriendlyNameRealDevices[cast_handle->numRealDevices] = cast_handle->deviceFriendlyName[i];
-                cast_handle->deviceDescriptionRealDevices[cast_handle->numRealDevices] = cast_handle->deviceDescription[i];
-                cast_handle->numRealDevices += 1; // Update total number of real playback devices.
-            }
-        }
-        else
-        {
-            wcscpy(cast_handle->deviceFriendlyName[i], L"Unknown");
-            wcscpy(cast_handle->deviceDescription[i], L"Unknown");
-
-            cast_handle->deviceNumChannel[i] = 1;
-        }
+		}
+		else
+		{
+			wcscpy(cast_handle->deviceFriendlyName[i], L"Unknown");
+			wcscpy(cast_handle->deviceDescription[i], L"Unknown");
+			cast_handle->deviceNumChannel[i] = 1;
+		}
 
 		PropVariantClear(&FriendlyName);
 		PropVariantClear(&DeviceDesc);
+	}
+
+	// -------------------------------------------------------------------------
+	// Pass 2: Now that dfxDeviceNum is fully resolved, classify all non-DFX
+	//         devices as real playback devices.
+	// -------------------------------------------------------------------------
+	for (i = 0; i < deviceCount; i++)
+	{
+		if ((int)i != cast_handle->dfxDeviceNum)
+		{
+			cast_handle->pwszIDRealDevices[cast_handle->numRealDevices] = cast_handle->pwszID[i];
+			cast_handle->deviceFriendlyNameRealDevices[cast_handle->numRealDevices] = cast_handle->deviceFriendlyName[i];
+			cast_handle->deviceDescriptionRealDevices[cast_handle->numRealDevices] = cast_handle->deviceDescription[i];
+			cast_handle->numRealDevices += 1;
+		}
 	}
 
 	CoTaskMemFree(pwszIDdefault);

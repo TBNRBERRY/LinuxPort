@@ -62,7 +62,7 @@ namespace FxSound
             bool device_found = false;
             for (auto device_config : device_configs)
             {
-                if (device_config.device_id == sound_device.pwszID.c_str())
+                if (device_config.device_name == sound_device.deviceFriendlyName.c_str())
                 {
                     device_found = true;
                     break;
@@ -82,13 +82,13 @@ namespace FxSound
         }
     }
 
-    DeviceConfig DeviceConfig::getDeviceConfig(Settings& settings, juce::String device_id)
+    DeviceConfig DeviceConfig::getDeviceConfig(Settings& settings, juce::String device_name)
     {
         juce::Array<DeviceConfig> device_configs = loadDeviceConfigs(settings, "device_configs");
 
         for (auto device_config : device_configs)
         {
-            if (device_config.device_id == device_id)
+            if (device_config.device_name == device_name)
             {
                 return device_config;
             }
@@ -121,6 +121,23 @@ namespace FxSound
         return device_config;
     }
 
+    juce::Array<DeviceConfig> DeviceConfig::removeDuplicates(const juce::Array<DeviceConfig>& device_configs)
+    {
+        juce::Array<DeviceConfig> result;
+        juce::StringArray duplicate_names;
+
+        for (const auto& device_config : device_configs)
+        {
+            if (!duplicate_names.contains(device_config.device_name))
+            {
+                duplicate_names.add(device_config.device_name);
+                result.add(device_config);
+            }
+        }
+
+        return result;
+    }
+
     juce::Array<DeviceConfig> DeviceConfig::loadDeviceConfigs(Settings& settings, juce::StringRef key)
     {
         juce::Array<DeviceConfig> device_configs;
@@ -136,7 +153,7 @@ namespace FxSound
             device_configs.add(fromJson(device_config));
         }
 
-        return device_configs;
+        return removeDuplicates(device_configs);
     }
 
     void DeviceConfig::saveDeviceConfigs(Settings& settings, juce::StringRef key, const juce::Array<DeviceConfig>& device_configs)

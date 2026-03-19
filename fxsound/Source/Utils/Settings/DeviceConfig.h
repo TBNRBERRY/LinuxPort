@@ -36,11 +36,12 @@ namespace FxSound
         static juce::Array<DeviceConfig> loadDeviceConfigs(Settings& settings, juce::StringRef key);
         static void saveDeviceConfigs(Settings& settings, juce::StringRef key, const juce::Array<DeviceConfig>& device_configs);
 
-        static DeviceConfig getDeviceConfig(Settings& settings, juce::String device_id);
+        static DeviceConfig getDeviceConfig(Settings& settings, juce::String device_name);
 
     private:
         static juce::var toJson(const DeviceConfig& device_config);
-        static DeviceConfig fromJson(const juce::var& v);        
+        static DeviceConfig fromJson(const juce::var& v);
+        static juce::Array<DeviceConfig> removeDuplicates(const juce::Array<DeviceConfig>& device_configs);
     };
 }
 

@@ -107,7 +107,7 @@ void FxOutputDeviceRow::update(int index, const DeviceConfig& device_config)
     device_name_.setBounds(x, bounds.getY(), width, bounds.getHeight());
 
     device_name_.setText(String::formatted("%d. ", row_index_ + 1) +  device_config.device_name, NotificationType::dontSendNotification);
-    device_name_.setEnabled(FxController::getInstance().isOutputDeviceConnected(device_config.device_id));
+    device_name_.setEnabled(FxController::getInstance().isOutputDeviceConnected(device_config.device_name));
 
     preset_list_.clear();
     preset_list_.setTextWhenNothingSelected(TRANS("Select preset"));
@@ -205,7 +205,7 @@ void FxOutputPreferenceListModel::updateDeviceConfig(const DeviceConfig device_c
 {
     for (auto i = 0; i < device_configs_.size(); i++)
     {
-        if (device_configs_[i].device_id == device_config.device_id)
+        if (device_configs_[i].device_name == device_config.device_name)
         {
             device_configs_.getReference(i).preset = device_config.preset;
             break;

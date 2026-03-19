@@ -124,8 +124,10 @@ public:
 
 	juce::Array<DeviceConfig> getDeviceConfigs();
     void saveDeviceConfigs(const juce::Array<DeviceConfig>& device_configs);
-	bool isOutputDeviceConnected(const String& output_device_id);
-	String getPreferredOutput();
+	bool isOutputDeviceConnected(const String& output_device_name);
+	SoundDevice getPreferredOutput();
+	const String& getOutputName();
+    void setOutputName(const String& output_device_name);
 
 	FxThemeMode getThemeMode();
 	void setThemeMode(FxThemeMode mode);
@@ -241,7 +243,7 @@ private:
 	bool authenticated_;
 	bool output_changed_;
     bool playback_device_available_;
-	String output_device_id_;
+	String output_device_name_;
 	std::vector<SoundDevice> active_output_devices_;
 	bool always_on_top_;
     bool hide_help_tooltips_;
@@ -251,7 +253,7 @@ private:
 	unsigned long audio_process_time_;
 	int audio_process_on_counter_;
 	int audio_process_off_counter_;
-	bool audio_process_on_;	
+	bool audio_process_on_;
 	std::time_t audio_process_start_time_;
 
 	bool minimize_tip_;

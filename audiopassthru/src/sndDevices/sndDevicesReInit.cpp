@@ -315,7 +315,7 @@ int PT_DECLSPEC sndDevicesReInit(PT_HANDLE *hp_sndDevices, int i_initType, int *
 	return(OKAY);
 }
 
-int PT_DECLSPEC sndCheckDeviceChanges(PT_HANDLE* hp_sndDevices)
+int PT_DECLSPEC sndCheckDeviceChanges(PT_HANDLE* hp_sndDevices, BOOL* bp_deviceChanged)
 {
 	struct sndDevicesHdlType* cast_handle;
 	IMMDeviceEnumeratorPtr pEnumerator = NULL;
@@ -327,6 +327,8 @@ int PT_DECLSPEC sndCheckDeviceChanges(PT_HANDLE* hp_sndDevices)
 	BOOL deviceFound;
 	LPWSTR pID = NULL;
 
+    *bp_deviceChanged = FALSE;
+
 	cast_handle = (struct sndDevicesHdlType*)hp_sndDevices;
 	if (cast_handle == NULL)
 		return(NOT_OKAY);
@@ -335,7 +337,7 @@ int PT_DECLSPEC sndCheckDeviceChanges(PT_HANDLE* hp_sndDevices)
 	if (FAILED(hr)) SND_DEVICES_SET_STATUS_AND_RETURN_OK(SND_DEVICES_INSTANCE_CREATE_FAILED)
 
 	// Enumerate all playback audio devices, "eRender" means look only for playback devices.
-	hr = pEnumerator->EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE, &pCollectionAllDevices);
+	hr = pEnumerator->EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE | DEVICE_STATE_UNPLUGGED, &pCollectionAllDevices);
 	if (FAILED(hr)) SND_DEVICES_SET_STATUS_AND_RETURN_OK(SND_DEVICES_ENUMERATE_FAILED)
 
 	// Now get total number of playback devices
@@ -345,6 +347,7 @@ int PT_DECLSPEC sndCheckDeviceChanges(PT_HANDLE* hp_sndDevices)
 	// If count is different, trigger stop
 	if (deviceCount != (UINT)cast_handle->totalNumDevices)
 	{
+        *bp_deviceChanged = TRUE;
 		cast_handle->stopAudioCaptureAndPlaybackLoop = 1;
 		return(OKAY);
 	}
@@ -371,6 +374,19 @@ int PT_DECLSPEC sndCheckDeviceChanges(PT_HANDLE* hp_sndDevices)
 			if (wcscmp(pID, cast_handle->pwszID[j]) == 0)
 			{
 				deviceFound = TRUE;
+
+				// Device ID matched — now check if its state has changed
+				DWORD currentState = 0;
+				hr = pDevice->GetState(&currentState);
+				if (SUCCEEDED(hr) && currentState != cast_handle->deviceState[j])
+				{
+					CoTaskMemFree(pID);
+					pDevice->Release();
+					*bp_deviceChanged = TRUE;
+					cast_handle->stopAudioCaptureAndPlaybackLoop = 1;
+					return(OKAY);
+				}
+
 				break;
 			}
 		}
@@ -380,6 +396,7 @@ int PT_DECLSPEC sndCheckDeviceChanges(PT_HANDLE* hp_sndDevices)
 
 		if (!deviceFound)
 		{
+            *bp_deviceChanged = TRUE;
 			cast_handle->stopAudioCaptureAndPlaybackLoop = 1;
 			return OKAY;
 		}

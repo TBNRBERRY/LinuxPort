@@ -73,7 +73,7 @@ public:
 	void setAsPlaybackDevice(const SoundDevice sound_device);
 	void registerCallback(AudioPassthruCallback *callback);
     bool isPlaybackDeviceAvailable();
-	void checkDeviceChanges();
+	bool checkDeviceChanges();
 	void restoreDefaultPlaybackDevice();
 
 private:

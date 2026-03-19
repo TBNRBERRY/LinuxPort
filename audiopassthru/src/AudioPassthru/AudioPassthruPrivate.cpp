@@ -121,7 +121,15 @@ void AudioPassthruPrivate::setDspProcessingModule(DfxDsp* p_dfx_dsp)
 
 std::vector<SoundDevice> AudioPassthruPrivate::getSoundDevices(bool active_devices)
 {
-	// Convert hp_sndDevices from C handle to C++ vector of SoundDevice.
+	if (checkDeviceChanges())
+	{
+		int numRealDevices;
+		int DfxDeviceEnabledFlag;
+		int statusFlag;
+
+		sndDevices_GetAll(hp_sndDevices_, &(s_sndDevices_.totalNumDevices));
+	}
+
 	sndDeviceHandleToSoundDevices(active_devices);
 	return sound_devices_;
 }
@@ -561,6 +569,7 @@ void AudioPassthruPrivate::registerCallback(AudioPassthruCallback* callback)
 bool AudioPassthruPrivate::isPlaybackDeviceAvailable()
 {
     BOOL availability;
+
     sndDevicesGetPlaybackDeviceAvialblility(hp_sndDevices_, &availability);
     if (availability == TRUE)
         return true;
@@ -568,9 +577,15 @@ bool AudioPassthruPrivate::isPlaybackDeviceAvailable()
         return false;
 }
 
-void AudioPassthruPrivate::checkDeviceChanges()
+bool AudioPassthruPrivate::checkDeviceChanges()
 {
-	sndCheckDeviceChanges(hp_sndDevices_);
+    BOOL deviceChanged;
+
+	sndCheckDeviceChanges(hp_sndDevices_, &deviceChanged);
+	if (deviceChanged == TRUE)
+		return true;
+	else
+        return false;
 }
 
 void AudioPassthruPrivate::restoreDefaultPlaybackDevice()
